@@ -1,0 +1,843 @@
+import React, { useEffect, useMemo, useState } from "react";
+
+/**
+ * FERRUM WORKS — Precision Manufacturing Landing Page
+ * ------------------------------------------------------------------
+ * Single-file React component, styled with Tailwind CSS (core utility
+ * classes only — zinc / emerald / amber palette, no custom config needed).
+ *
+ * Signature design element: a "CAD viewport" motif — thin corner brackets
+ * and a blueprint grid, echoing the technical drawings this fabrication
+ * shop turns into real parts every day.
+ *
+ * Fonts: Space Grotesk (display) + Inter (body) + JetBrains Mono (specs/
+ * labels) are loaded at runtime via Google Fonts so this file works as a
+ * drop-in component without touching tailwind.config.js.
+ *
+ * Drop this into any Vite/CRA/Next project with Tailwind already set up.
+ */
+
+/* ------------------------------------------------------------------ */
+/*  Fonts                                                              */
+/* ------------------------------------------------------------------ */
+
+function useGoogleFonts() {
+  useEffect(() => {
+    if (document.getElementById("ferrum-fonts")) return;
+    const link = document.createElement("link");
+    link.id = "ferrum-fonts";
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap";
+    document.head.appendChild(link);
+  }, []);
+}
+
+const font = {
+  display: { fontFamily: "'Space Grotesk', sans-serif" },
+  body: { fontFamily: "'Inter', sans-serif" },
+  mono: { fontFamily: "'JetBrains Mono', monospace" },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Signature element: CAD viewport corner brackets                    */
+/* ------------------------------------------------------------------ */
+
+function ViewportCorners({ className = "", color = "stroke-emerald-500" }) {
+  const corner =
+    "absolute w-6 h-6 md:w-8 md:h-8 transition-all duration-300";
+  return (
+    <div className={`pointer-events-none absolute inset-0 ${className}`}>
+      <svg className={`${corner} -top-2 -left-2 md:-top-3 md:-left-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M2 14V2H14" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -top-2 -right-2 md:-top-3 md:-right-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M30 14V2H18" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -bottom-2 -left-2 md:-bottom-3 md:-left-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M2 18V30H14" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -bottom-2 -right-2 md:-bottom-3 md:-right-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M30 18V30H18" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+    </div>
+  );
+}
+
+function BlueprintGrid({ className = "" }) {
+  return (
+    <svg
+      className={`absolute inset-0 h-full w-full ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <pattern id="ferrum-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0H0V40" fill="none" stroke="currentColor" strokeWidth="1" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#ferrum-grid)" />
+    </svg>
+  );
+}
+
+function SpecBadge({ label, value, className = "" }) {
+  return (
+    <div
+      className={`rounded-lg border border-zinc-800 bg-zinc-950/90 px-4 py-3 backdrop-blur-sm shadow-xl shadow-black/40 ${className}`}
+    >
+      <div style={font.mono} className="text-[10px] uppercase tracking-widest text-zinc-500">
+        {label}
+      </div>
+      <div style={font.mono} className="mt-1 text-sm font-medium text-emerald-400">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Icons (hand-drawn, line style, no external icon library)           */
+/* ------------------------------------------------------------------ */
+
+const iconProps = {
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+const Icons = {
+  Caliper: (p) => (
+    <svg {...iconProps} {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8v8M8 12h8" />
+    </svg>
+  ),
+  Shield: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  ),
+  Bolt: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M13 3L5 13h5l-1 8 8-10h-5l1-8z" />
+    </svg>
+  ),
+  Network: (p) => (
+    <svg {...iconProps} {...p}>
+      <circle cx="5" cy="6" r="2" />
+      <circle cx="19" cy="6" r="2" />
+      <circle cx="12" cy="18" r="2" />
+      <path d="M6.7 7.3L11 16M17.3 7.3L13 16M7 6h10" />
+    </svg>
+  ),
+  ArrowRight: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  ),
+  Menu: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  ),
+  Close: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  ),
+  Star: (p) => (
+    <svg {...iconProps} fill="currentColor" stroke="none" {...p}>
+      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7-5.4-4.7 7.1-.6L12 2z" />
+    </svg>
+  ),
+  LinkedIn: (p) => (
+    <svg {...iconProps} fill="currentColor" stroke="none" {...p}>
+      <path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-1 1.83-2 3.77-2 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V21h-4V9z" />
+    </svg>
+  ),
+  Instagram: (p) => (
+    <svg {...iconProps} {...p}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  Youtube: (p) => (
+    <svg {...iconProps} {...p}>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="3" />
+      <path d="M10.5 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+};
+
+/* ------------------------------------------------------------------ */
+/*  Data                                                               */
+/* ------------------------------------------------------------------ */
+
+const NAV_LINKS = [
+  { label: "Layanan", href: "#layanan" },
+  { label: "Proses", href: "#proses" },
+  { label: "Keunggulan", href: "#keunggulan" },
+  { label: "Testimoni", href: "#testimoni" },
+  { label: "Kontak", href: "#kontak" },
+];
+
+const FEATURES = [
+  {
+    icon: Icons.Caliper,
+    title: "Presisi Bertoleransi Ketat",
+    desc: "Pemesinan CNC 3–5 axis dengan toleransi hingga ±0.02mm, diverifikasi laporan CMM di tiap batch produksi.",
+  },
+  {
+    icon: Icons.Shield,
+    title: "Kontrol Kualitas Berlapis",
+    desc: "Inspeksi dimensi di setiap tahap, mengacu standar ISO 9001:2015, dengan Certificate of Conformance terlampir.",
+  },
+  {
+    icon: Icons.Bolt,
+    title: "Dari Prototipe ke Produksi Massal",
+    desc: "Sample tunggal hingga ribuan unit dalam satu jalur produksi — lead time prototipe mulai 3 hari kerja.",
+  },
+  {
+    icon: Icons.Network,
+    title: "Rantai Pasok Terkoneksi",
+    desc: "Pelacakan status pesanan secara real-time dan jadwal pengiriman yang menyesuaikan lini produksi Anda.",
+  },
+];
+
+const SHOWCASE_TABS = [
+  {
+    id: "cnc",
+    label: "Pemesinan CNC",
+    eyebrow: "PROSES 01 — MACHINING",
+    title: "Pemesinan CNC 3–5 Axis",
+    desc: "Milling dan turning presisi untuk komponen logam dan plastik teknik, dari purwarupa satuan hingga batch produksi berulang dengan hasil yang konsisten.",
+    image:
+      "https://images.unsplash.com/photo-1666618090858-fbcee636bd3e?auto=format&fit=crop&w=1400&q=80",
+    specs: [
+      { label: "Toleransi", value: "±0.02 mm" },
+      { label: "Axis", value: "3–5 Axis" },
+      { label: "Material", value: "Alumunium, Baja, Kuningan" },
+    ],
+  },
+  {
+    id: "sheet",
+    label: "Fabrikasi Pelat Logam",
+    eyebrow: "PROSES 02 — SHEET METAL",
+    title: "Fabrikasi Pelat Logam",
+    desc: "Cutting, bending, dan punching pelat logam dengan jalur produksi otomatis, dilengkapi opsi finishing powder coating maupun anodizing.",
+    image:
+      "https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=1400&q=80",
+    specs: [
+      { label: "Ketebalan", value: "0.5 – 12 mm" },
+      { label: "Proses", value: "Cutting · Bending · Punching" },
+      { label: "Finishing", value: "Powder Coating, Anodizing" },
+    ],
+  },
+  {
+    id: "welding",
+    label: "Pengelasan & Perakitan",
+    eyebrow: "PROSES 03 — WELDING",
+    title: "Pengelasan & Perakitan",
+    desc: "Welder bersertifikat mengerjakan sambungan TIG dan MIG, dilanjutkan perakitan akhir dan inspeksi visual menyeluruh sebelum pengiriman.",
+    image:
+      "https://images.unsplash.com/photo-1738162837408-5fbf53f0b97a?auto=format&fit=crop&w=1400&q=80",
+    specs: [
+      { label: "Metode", value: "TIG / MIG / Spot" },
+      { label: "Operator", value: "Welder Tersertifikasi" },
+      { label: "Inspeksi", value: "Visual + Dye Penetrant" },
+    ],
+  },
+  {
+    id: "qc",
+    label: "Inspeksi Kualitas",
+    eyebrow: "PROSES 04 — QUALITY CONTROL",
+    title: "Inspeksi Kualitas",
+    desc: "Setiap komponen diukur menggunakan CMM dan height gauge sebelum lolos ke tahap pengemasan, dengan laporan yang dapat ditelusuri per batch.",
+    image:
+      "https://images.unsplash.com/photo-1705579612181-faf45962cfcb?auto=format&fit=crop&w=1400&q=80",
+    specs: [
+      { label: "Alat Ukur", value: "CMM, Height Gauge" },
+      { label: "Standar", value: "ISO 9001:2015" },
+      { label: "Laporan", value: "Certificate of Conformance" },
+    ],
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Ferrum Works memangkas lead time komponen custom kami dari 3 minggu menjadi 8 hari kerja, tanpa mengorbankan toleransi.",
+    name: "Bayu Prasetyo",
+    role: "Procurement Manager, Industri Otomotif",
+    avatar: "https://i.pravatar.cc/150?img=12",
+  },
+  {
+    quote:
+      "Laporan QC yang mereka lampirkan di setiap pengiriman benar-benar memudahkan proses incoming inspection kami.",
+    name: "Dewi Anggraini",
+    role: "QA Lead, Manufaktur Elektronik",
+    avatar: "https://i.pravatar.cc/150?img=47",
+  },
+  {
+    quote:
+      "Tim engineering mereka proaktif memberi masukan DFM sebelum produksi dimulai, menghemat banyak revisi desain.",
+    name: "Rahmat Hidayat",
+    role: "R&D Engineer, Alat Berat",
+    avatar: "https://i.pravatar.cc/150?img=33",
+  },
+];
+
+const SECTORS = ["Otomotif", "F&B Processing", "Elektronik", "Alat Berat", "Energi"];
+
+/* ------------------------------------------------------------------ */
+/*  Navbar                                                             */
+/* ------------------------------------------------------------------ */
+
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? "border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-xl"
+          : "border-b border-transparent bg-transparent"
+      }`}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10">
+        <a href="#top" className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/10">
+            <span style={font.mono} className="text-xs font-medium text-emerald-400">
+              FW
+            </span>
+          </span>
+          <span style={font.display} className="text-lg font-semibold tracking-tight text-zinc-50">
+            FERRUM<span className="text-emerald-500">WORKS</span>
+          </span>
+        </a>
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-sm text-zinc-300 transition-colors hover:text-emerald-400"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="hidden md:block">
+          <a
+            href="#kontak"
+            className="group inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-zinc-950 transition-all hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/20"
+          >
+            Ajukan RFQ
+            <Icons.ArrowRight width={16} height={16} className="transition-transform group-hover:translate-x-0.5" />
+          </a>
+        </div>
+
+        <button
+          className="text-zinc-200 md:hidden"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Buka menu navigasi"
+        >
+          {open ? <Icons.Close /> : <Icons.Menu />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="border-t border-zinc-800 bg-zinc-950/95 px-6 py-4 md:hidden">
+          <nav className="flex flex-col gap-4">
+            {NAV_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="text-sm text-zinc-300 hover:text-emerald-400"
+              >
+                {l.label}
+              </a>
+            ))}
+            <a
+              href="#kontak"
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-zinc-950"
+            >
+              Ajukan RFQ
+            </a>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Hero                                                               */
+/* ------------------------------------------------------------------ */
+
+function Hero() {
+  return (
+    <section id="top" className="relative overflow-hidden bg-zinc-950 pb-24 pt-40 md:pb-32 md:pt-48">
+      <BlueprintGrid className="text-zinc-800/60 [mask-image:radial-gradient(ellipse_at_top,black_0%,transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-40 right-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 md:grid-cols-2 md:px-10">
+        <div>
+          <div
+            style={font.mono}
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-[11px] uppercase tracking-widest text-emerald-400"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Fasilitas Bersertifikat ISO 9001:2015
+          </div>
+
+          <h1
+            style={font.display}
+            className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight text-zinc-50 sm:text-5xl lg:text-6xl"
+          >
+            Dari gambar teknik,
+            <br />
+            menjadi <span className="text-emerald-500">komponen presisi.</span>
+          </h1>
+
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-zinc-400 md:text-lg">
+            Kami mengubah desain CAD Anda menjadi part logam nyata — pemesinan CNC,
+            fabrikasi pelat, dan perakitan dengan toleransi ketat, dikirim tepat
+            waktu langsung ke lini produksi Anda.
+          </p>
+
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <a
+              href="#kontak"
+              className="group inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-6 py-3.5 text-sm font-medium text-zinc-950 transition-all hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/20"
+            >
+              Ajukan RFQ Sekarang
+              <Icons.ArrowRight width={16} height={16} className="transition-transform group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="#proses"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-zinc-700 px-6 py-3.5 text-sm font-medium text-zinc-200 transition-colors hover:border-emerald-500/50 hover:text-emerald-400"
+            >
+              Lihat Kapasitas Produksi
+            </a>
+          </div>
+
+          <div className="mt-14">
+            <div style={font.mono} className="text-[11px] uppercase tracking-widest text-zinc-600">
+              Melayani sektor
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {SECTORS.map((s) => (
+                <span
+                  key={s}
+                  style={font.mono}
+                  className="rounded border border-zinc-800 px-2.5 py-1 text-xs text-zinc-400"
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="relative mx-4 my-6 md:mx-8 md:my-10">
+            <ViewportCorners />
+            <div className="overflow-hidden rounded-lg border border-zinc-800">
+              <img
+                src="https://images.unsplash.com/photo-1752614671052-92e18f534db1?auto=format&fit=crop&w=1400&q=80"
+                alt="Lengan robot industri bekerja di lini produksi otomatis"
+                className="h-[420px] w-full object-cover md:h-[520px]"
+              />
+            </div>
+          </div>
+
+          <SpecBadge
+            label="Toleransi"
+            value="±0.02mm"
+            className="absolute -left-2 top-6 hidden -translate-x-1/2 sm:block md:-left-6"
+          />
+          <SpecBadge
+            label="Kapasitas"
+            value="24/7 Produksi"
+            className="absolute -right-2 bottom-16 hidden translate-x-1/3 sm:block md:-right-6"
+          />
+          <SpecBadge
+            label="Terkirim"
+            value="500+ Batch Part"
+            className="absolute -bottom-4 left-1/4 hidden sm:block"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Features                                                           */
+/* ------------------------------------------------------------------ */
+
+function Features() {
+  return (
+    <section id="keunggulan" className="bg-zinc-50 py-24 md:py-32">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs uppercase tracking-widest text-emerald-600">
+            Kenapa Ferrum Works
+          </div>
+          <h2 style={font.display} className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+            Dibangun untuk tim engineering yang tidak bisa berkompromi.
+          </h2>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="group relative bg-zinc-50 p-8 transition-colors hover:bg-white">
+              <ViewportCorners
+                className="opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                color="stroke-emerald-500"
+              />
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-900 text-emerald-400">
+                <f.icon width={20} height={20} />
+              </div>
+              <h3 style={font.display} className="mt-6 text-lg font-semibold text-zinc-900">
+                {f.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Interactive Showcase                                               */
+/* ------------------------------------------------------------------ */
+
+function Showcase() {
+  const [active, setActive] = useState(SHOWCASE_TABS[0].id);
+  const tab = useMemo(() => SHOWCASE_TABS.find((t) => t.id === active), [active]);
+
+  return (
+    <section id="proses" className="bg-zinc-950 py-24 md:py-32">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs uppercase tracking-widest text-emerald-500">
+            Alur Produksi
+          </div>
+          <h2 style={font.display} className="mt-3 text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
+            Satu fasilitas, empat proses inti.
+          </h2>
+        </div>
+
+        <div className="mt-12 flex flex-wrap gap-2 border-b border-zinc-800 pb-4">
+          {SHOWCASE_TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActive(t.id)}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
+                active === t.id
+                  ? "bg-emerald-500 text-zinc-950"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 items-center gap-12 md:grid-cols-2">
+          <div className="relative order-2 md:order-1">
+            <div style={font.mono} className="text-[11px] uppercase tracking-widest text-emerald-500">
+              {tab.eyebrow}
+            </div>
+            <h3 style={font.display} className="mt-3 text-2xl font-semibold text-zinc-50 md:text-3xl">
+              {tab.title}
+            </h3>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-400 md:text-base">{tab.desc}</p>
+
+            <dl className="mt-8 space-y-4 border-t border-zinc-800 pt-6">
+              {tab.specs.map((s) => (
+                <div key={s.label} className="flex items-center justify-between">
+                  <dt style={font.mono} className="text-xs uppercase tracking-wider text-zinc-500">
+                    {s.label}
+                  </dt>
+                  <dd style={font.mono} className="text-sm text-emerald-400">
+                    {s.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="relative order-1 mx-2 my-4 md:order-2 md:mx-6">
+            <ViewportCorners />
+            <div className="overflow-hidden rounded-lg border border-zinc-800">
+              <img
+                key={tab.id}
+                src={tab.image}
+                alt={tab.title}
+                className="h-72 w-full object-cover transition-opacity duration-500 sm:h-96 md:h-[420px]"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Testimonials                                                       */
+/* ------------------------------------------------------------------ */
+
+function Testimonials() {
+  return (
+    <section id="testimoni" className="bg-zinc-50 py-24 md:py-32">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs uppercase tracking-widest text-emerald-600">
+            Dipercaya Tim Procurement & Engineering
+          </div>
+          <h2 style={font.display} className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+            Kata mereka yang sudah bekerja sama.
+          </h2>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {TESTIMONIALS.map((t) => (
+            <figure
+              key={t.name}
+              className="flex flex-col justify-between rounded-xl border border-zinc-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/5"
+            >
+              <div>
+                <div className="flex gap-0.5 text-amber-400">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Icons.Star key={i} width={14} height={14} />
+                  ))}
+                </div>
+                <blockquote className="mt-4 text-sm leading-relaxed text-zinc-700">
+                  "{t.quote}"
+                </blockquote>
+              </div>
+              <figcaption className="mt-8 flex items-center gap-3">
+                <img
+                  src={t.avatar}
+                  alt={t.name}
+                  className="h-11 w-11 rounded-full border border-zinc-200 object-cover"
+                />
+                <div>
+                  <div className="text-sm font-medium text-zinc-900">{t.name}</div>
+                  <div className="text-xs text-zinc-500">{t.role}</div>
+                </div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  CTA Band                                                           */
+/* ------------------------------------------------------------------ */
+
+function CtaBand() {
+  return (
+    <section id="kontak" className="relative overflow-hidden bg-emerald-500 py-20">
+      <BlueprintGrid className="text-emerald-600/40" />
+      <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 text-center">
+        <h2 style={font.display} className="text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
+          Punya gambar teknik yang siap diproduksi?
+        </h2>
+        <p className="max-w-lg text-sm text-zinc-900/70 md:text-base">
+          Kirimkan file CAD atau spesifikasi part Anda, tim engineering kami akan
+          membalas dengan quotation dan estimasi lead time dalam 1x24 jam kerja.
+        </p>
+        <a
+          href="mailto:rfq@ferrumworks.example"
+          className="mt-2 inline-flex items-center gap-2 rounded-md bg-zinc-950 px-6 py-3.5 text-sm font-medium text-zinc-50 transition-all hover:bg-zinc-800"
+        >
+          Ajukan RFQ Sekarang
+          <Icons.ArrowRight width={16} height={16} />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Footer                                                             */
+/* ------------------------------------------------------------------ */
+
+function Footer() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubmitted(true);
+    setEmail("");
+  };
+
+  return (
+    <footer className="bg-zinc-950 pt-20">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="grid grid-cols-1 gap-12 border-b border-zinc-800 pb-16 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <a href="#top" className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/10">
+                <span style={font.mono} className="text-xs font-medium text-emerald-400">
+                  FW
+                </span>
+              </span>
+              <span style={font.display} className="text-lg font-semibold text-zinc-50">
+                FERRUM<span className="text-emerald-500">WORKS</span>
+              </span>
+            </a>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500">
+              Mitra fabrikasi dan manufaktur presisi untuk tim engineering dan
+              procurement yang butuh part akurat, tepat waktu.
+            </p>
+            <div className="mt-6 flex gap-3">
+              {[Icons.LinkedIn, Icons.Instagram, Icons.Youtube].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-800 text-zinc-400 transition-colors hover:border-emerald-500/50 hover:text-emerald-400"
+                  aria-label="Tautan media sosial"
+                >
+                  <Icon width={16} height={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs uppercase tracking-widest text-zinc-500">
+              Navigasi
+            </div>
+            <ul className="mt-4 space-y-3">
+              {NAV_LINKS.map((l) => (
+                <li key={l.href}>
+                  <a href={l.href} className="text-sm text-zinc-400 hover:text-emerald-400">
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs uppercase tracking-widest text-zinc-500">
+              Layanan
+            </div>
+            <ul className="mt-4 space-y-3">
+              {["Pemesinan CNC", "Fabrikasi Pelat Logam", "Pengelasan & Perakitan", "Inspeksi Kualitas"].map(
+                (s) => (
+                  <li key={s}>
+                    <a href="#proses" className="text-sm text-zinc-400 hover:text-emerald-400">
+                      {s}
+                    </a>
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs uppercase tracking-widest text-zinc-500">
+              Buletin Produksi
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-500">
+              Update kapasitas produksi dan studi kasus, langsung ke inbox Anda.
+            </p>
+            {submitted ? (
+              <p style={font.mono} className="mt-4 text-sm text-emerald-400">
+                Terima kasih, email Anda tercatat.
+              </p>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@perusahaan.com"
+                  className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-emerald-400"
+                >
+                  Kirim
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-between gap-4 py-8 sm:flex-row">
+          <p className="text-xs text-zinc-600">
+            © {new Date().getFullYear()} Ferrum Works. Semua hak dilindungi.
+          </p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">
+              Kebijakan Privasi
+            </a>
+            <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300">
+              Syarat & Ketentuan
+            </a>
+            <span style={font.mono} className="text-xs text-zinc-600">
+              ISO 9001:2015 CERTIFIED
+            </span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  App                                                                 */
+/* ------------------------------------------------------------------ */
+
+export default function App() {
+  useGoogleFonts();
+
+  return (
+    <div style={font.body} className="min-h-screen bg-zinc-950 antialiased">
+      <Navbar />
+      <main>
+        <Hero />
+        <Features />
+        <Showcase />
+        <Testimonials />
+        <CtaBand />
+      </main>
+      <Footer />
+    </div>
+  );
+}
