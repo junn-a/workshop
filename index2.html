@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ferrum Works — Precision Manufacturing Partner</title>
+<meta name="description" content="Ferrum Works — mitra fabrikasi dan manufaktur presisi: pemesinan CNC, fabrikasi pelat logam, pengelasan, dan inspeksi kualitas." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+  /* Modern SaaS Style - Custom Utilities for Soft Shadows & Hardware Accelerated Animations */
+  .saas-shadow-soft {
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+  
+  .saas-shadow-hover {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .saas-shadow-hover:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Subtle Motion Framework (Staggered Entrance Animation) */
+  @keyframes saasFadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-saas-fade-in {
+    opacity: 0;
+    animation: saasFadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+
+  /* Scroll Reveal State Engine */
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body class="bg-zinc-950">
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+const { useEffect, useMemo, useState, useRef } = React;
+
+/* ------------------------------------------------------------------ */
+/* Fonts                                                             */
+/* ------------------------------------------------------------------ */
+
+const font = {
+  display: { fontFamily: "'Space Grotesk', sans-serif" },
+  body: { fontFamily: "'Inter', sans-serif" },
+  mono: { fontFamily: "'JetBrains Mono', monospace" },
+};
+
+/* ------------------------------------------------------------------ */
+/* Custom Hook for Scroll Reveal (Subtle Motion Implementation)     */
+/* ------------------------------------------------------------------ */
+
+function useScrollReveal() {
+  const elementRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal-visible");
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    );
+
+    if (elementRef.current) {
+      elementRef.current.classList.add("reveal-hidden");
+      observer.observe(elementRef.current);
+    }
+
+    return () => {
+      if (elementRef.current) observer.disconnect();
+    };
+  }, []);
+
+  return elementRef;
+}
+
+/* ------------------------------------------------------------------ */
+/* Signature element: CAD viewport corner brackets                   */
+/* ------------------------------------------------------------------ */
+
+function ViewportCorners({ className = "", color = "stroke-emerald-500" }) {
+  const corner = "absolute w-6 h-6 md:w-8 md:h-8 transition-all duration-300";
+  return (
+    <div className={`pointer-events-none absolute inset-0 ${className}`}>
+      <svg className={`${corner} -top-2 -left-2 md:-top-3 md:-left-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M2 14V2H14" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -top-2 -right-2 md:-top-3 md:-right-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M30 14V2H18" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -bottom-2 -left-2 md:-bottom-3 md:-left-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M2 18V30H14" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+      <svg className={`${corner} -bottom-2 -right-2 md:-bottom-3 md:-right-3`} viewBox="0 0 32 32" fill="none">
+        <path d="M30 18V30H18" strokeWidth="2" className={color} strokeLinecap="square" />
+      </svg>
+    </div>
+  );
+}
+
+function BlueprintGrid({ className = "" }) {
+  return (
+    <svg className={`absolute inset-0 h-full w-full ${className}`} xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="ferrum-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0H0V40" fill="none" stroke="currentColor" strokeWidth="1" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#ferrum-grid)" />
+    </svg>
+  );
+}
+
+function SpecBadge({ label, value, className = "", delay = "0ms" }) {
+  return (
+    <div 
+      style={{ animationDelay: delay }}
+      className={`rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 backdrop-blur-md shadow-2xl shadow-black/60 animate-saas-fade-in ${className}`}
+    >
+      <div style={font.mono} className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</div>
+      <div style={font.mono} className="mt-1 text-sm font-medium text-emerald-400">{value}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Icons                                                             */
+/* ------------------------------------------------------------------ */
+
+const iconProps = {
+  width: 24, height: 24, viewBox: "0 0 24 24", fill: "none",
+  stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round",
+};
+
+const Icons = {
+  Caliper: (p) => (
+    <svg {...iconProps} {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8v8M8 12h8" />
+    </svg>
+  ),
+  Shield: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  ),
+  Bolt: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M13 3L5 13h5l-1 8 8-10h-5l1-8z" />
+    </svg>
+  ),
+  Network: (p) => (
+    <svg {...iconProps} {...p}>
+      <circle cx="5" cy="6" r="2" />
+      <circle cx="19" cy="6" r="2" />
+      <circle cx="12" cy="18" r="2" />
+      <path d="M6.7 7.3L11 16M17.3 7.3L13 16M7 6h10" />
+    </svg>
+  ),
+  ArrowRight: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  ),
+  Menu: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  ),
+  Close: (p) => (
+    <svg {...iconProps} {...p}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  ),
+  Star: (p) => (
+    <svg {...iconProps} fill="currentColor" stroke="none" {...p}>
+      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7-5.4-4.7 7.1-.6L12 2z" />
+    </svg>
+  ),
+  LinkedIn: (p) => (
+    <svg {...iconProps} fill="currentColor" stroke="none" {...p}>
+      <path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-1 1.83-2 3.77-2 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V21h-4V9z" />
+    </svg>
+  ),
+  Instagram: (p) => (
+    <svg {...iconProps} {...p}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  Youtube: (p) => (
+    <svg {...iconProps} {...p}>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="3" />
+      <path d="M10.5 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+};
+
+/* ------------------------------------------------------------------ */
+/* Data                                                              */
+/* ------------------------------------------------------------------ */
+
+const NAV_LINKS = [
+  { label: "Layanan", href: "#layanan" },
+  { label: "Proses", href: "#proses" },
+  { label: "Keunggulan", href: "#keunggulan" },
+  { label: "Testimoni", href: "#testimoni" },
+  { label: "Kontak", href: "#kontak" },
+];
+
+const FEATURES = [
+  { icon: Icons.Caliper, title: "Presisi Bertoleransi Ketat", desc: "Pemesinan CNC 3–5 axis dengan toleransi hingga ±0.02mm, diverifikasi laporan CMM di tiap batch produksi." },
+  { icon: Icons.Shield, title: "Kontrol Kualitas Berlapis", desc: "Inspeksi dimensi di setiap tahap, mengacu standar ISO 9001:2015, dengan Certificate of Conformance terlampir." },
+  { icon: Icons.Bolt, title: "Dari Prototipe ke Produksi Massal", desc: "Sample tunggal hingga ribuan unit dalam satu jalur produksi — lead time prototipe mulai 3 hari kerja." },
+  { icon: Icons.Network, title: "Rantai Pasok Terkoneksi", desc: "Pelacakan status pesanan secara real-time dan jadwal pengiriman yang menyesuaikan lini produksi Anda." },
+];
+
+const SHOWCASE_TABS = [
+  {
+    id: "cnc", label: "Pemesinan CNC", eyebrow: "PROSES 01 — MACHINING", title: "Pemesinan CNC 3–5 Axis",
+    desc: "Milling dan turning presisi untuk komponen logam dan plastik teknik, dari purwarupa satuan hingga batch produksi berulang dengan hasil yang konsisten.",
+    image: "https://images.unsplash.com/photo-1666618090858-fbcee636bd3e?auto=format&fit=crop&w=1400&q=80",
+    specs: [{ label: "Toleransi", value: "±0.02 mm" }, { label: "Axis", value: "3–5 Axis" }, { label: "Material", value: "Alumunium, Baja, Kuningan" }],
+  },
+  {
+    id: "sheet", label: "Fabrikasi Pelat Logam", eyebrow: "PROSES 02 — SHEET METAL", title: "Fabrikasi Pelat Logam",
+    desc: "Cutting, bending, dan punching pelat logam dengan jalur produksi otomatis, dilengkapi opsi finishing powder coating maupun anodizing.",
+    image: "https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=1400&q=80",
+    specs: [{ label: "Ketebalan", value: "0.5 – 12 mm" }, { label: "Proses", value: "Cutting · Bending · Punching" }, { label: "Finishing", value: "Powder Coating, Anodizing" }],
+  },
+  {
+    id: "welding", label: "Pengelasan & Perakitan", eyebrow: "PROSES 03 — WELDING", title: "Pengelasan & Perakitan",
+    desc: "Welder bersertifikat mengerjakan sambungan TIG dan MIG, dilanjutkan perakitan akhir dan inspeksi visual menyeluruh sebelum pengiriman.",
+    image: "https://images.unsplash.com/photo-1738162837408-5fbf53f0b97a?auto=format&fit=crop&w=1400&q=80",
+    specs: [{ label: "Metode", value: "TIG / MIG / Spot" }, { label: "Operator", value: "Welder Tersertifikasi" }, { label: "Inspeksi", value: "Visual + Dye Penetrant" }],
+  },
+  {
+    id: "qc", label: "Inspeksi Kualitas", eyebrow: "PROSES 04 — QUALITY CONTROL", title: "Inspeksi Kualitas",
+    desc: "Setiap komponen diukur menggunakan CMM dan height gauge sebelum lolos ke tahap pengemasan, dengan laporan yang dapat ditelusuri per batch.",
+    image: "https://images.unsplash.com/photo-1705579612181-faf45962cfcb?auto=format&fit=crop&w=1400&q=80",
+    specs: [{ label: "Alat Ukur", value: "CMM, Height Gauge" }, { label: "Standar", value: "ISO 9001:2015" }, { label: "Laporan", value: "Certificate of Conformance" }],
+  },
+];
+
+const TESTIMONIALS = [
+  { quote: "Ferrum Works memangkas lead time komponen custom kami dari 3 minggu menjadi 8 hari kerja, tanpa mengorbankan toleransi.", name: "Bayu Prasetyo", role: "Procurement Manager, Industri Otomotif", avatar: "https://i.pravatar.cc/150?img=12" },
+  { quote: "Laporan QC yang mereka lampirkan di setiap pengiriman benar-benar memudahkan proses incoming inspection kami.", name: "Dewi Anggraini", role: "QA Lead, Manufaktur Elektronik", avatar: "https://i.pravatar.cc/150?img=47" },
+  { quote: "Tim engineering mereka proaktif memberi masukan DFM sebelum produksi dimulai, menghemat banyak revisi desain.", name: "Rahmat Hidayat", role: "R&D Engineer, Alat Berat", avatar: "https://i.pravatar.cc/150?img=33" },
+];
+
+const SECTORS = ["Otomotif", "F&B Processing", "Elektronik", "Alat Berat", "Energi"];
+
+/* ------------------------------------------------------------------ */
+/* Navbar                                                            */
+/* ------------------------------------------------------------------ */
+
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? "border-b border-zinc-800/60 bg-zinc-950/70 backdrop-blur-xl py-3 shadow-lg shadow-black/10" : "border-b border-transparent bg-transparent py-5"}`}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
+        <a href="#top" className="flex items-center gap-2 group transition-transform duration-200 active:scale-95">
+          <span className="flex h-8 w-8 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/10 transition-colors group-hover:bg-emerald-500/20">
+            <span style={font.mono} className="text-xs font-medium text-emerald-400">FW</span>
+          </span>
+          <span style={font.display} className="text-lg font-semibold tracking-tight text-zinc-50">
+            FERRUM<span className="text-emerald-500 transition-colors group-hover:text-emerald-400">WORKS</span>
+          </span>
+        </a>
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="text-sm text-zinc-400 font-medium transition-colors hover:text-emerald-400 relative py-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-emerald-500 after:transition-all hover:after:w-full">{l.label}</a>
+          ))}
+        </nav>
+
+        <div className="hidden md:block">
+          <a href="#kontak" className="group inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-zinc-950 transition-all duration-200 hover:bg-emerald-400 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0">
+            Ajukan RFQ
+            <Icons.ArrowRight width={16} height={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+          </a>
+        </div>
+
+        <button className="text-zinc-200 md:hidden p-1 transition-transform active:scale-90" onClick={() => setOpen((v) => !v)} aria-label="Buka menu navigasi">
+          {open ? <Icons.Close /> : <Icons.Menu />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="border-t border-zinc-900 bg-zinc-950/95 px-6 py-6 md:hidden animate-saas-fade-in shadow-xl">
+          <nav className="flex flex-col gap-4">
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-sm font-medium text-zinc-300 py-1 border-b border-zinc-900 hover:text-emerald-400 transition-colors">{l.label}</a>
+            ))}
+            <a href="#kontak" onClick={() => setOpen(false)} className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-medium text-zinc-950">
+              Ajukan RFQ
+            </a>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                              */
+/* ------------------------------------------------------------------ */
+
+function Hero() {
+  return (
+    <section id="top" className="relative overflow-hidden bg-zinc-950 pb-24 pt-40 md:pb-32 md:pt-48">
+      <BlueprintGrid className="text-zinc-800/40 [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_75%)]" />
+      <div className="pointer-events-none absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-emerald-500/5 blur-[120px]" />
+
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 md:grid-cols-2 md:px-10">
+        <div>
+          {/* Staggered Element 1 */}
+          <div style={{...font.mono, animationDelay: '0ms'}} className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/40 px-3.5 py-1.5 text-[11px] uppercase tracking-widest text-emerald-400 animate-saas-fade-in backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Fasilitas Bersertifikat ISO 9001:2015
+          </div>
+
+          {/* Staggered Element 2 */}
+          <h1 style={{...font.display, animationDelay: '150ms'}} className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-zinc-50 sm:text-5xl lg:text-6xl animate-saas-fade-in">
+            Dari gambar teknik,<br />
+            menjadi <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">komponen presisi.</span>
+          </h1>
+
+          {/* Staggered Element 3 */}
+          <p style={{animationDelay: '300ms'}} className="mt-6 max-w-lg text-base leading-relaxed text-zinc-400 md:text-lg animate-saas-fade-in font-normal">
+            Kami mengubah desain CAD Anda menjadi part logam nyata — pemesinan CNC,
+            fabrikasi pelat, dan perakitan dengan toleransi ketat, dikirim tepat
+            waktu langsung ke lini produksi Anda.
+          </p>
+
+          {/* Staggered Element 4 */}
+          <div style={{animationDelay: '450ms'}} className="mt-10 flex flex-col gap-4 sm:flex-row animate-saas-fade-in">
+            <a href="#kontak" className="group inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-6 py-3.5 text-sm font-medium text-zinc-950 transition-all duration-200 hover:bg-emerald-400 hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0">
+              Ajukan RFQ Sekarang
+              <Icons.ArrowRight width={16} height={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+            </a>
+            <a href="#proses" className="inline-flex items-center justify-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/20 px-6 py-3.5 text-sm font-medium text-zinc-300 backdrop-blur-sm transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-900/50 hover:text-zinc-100">
+              Lihat Kapasitas Produksi
+            </a>
+          </div>
+
+          {/* Staggered Element 5 */}
+          <div style={{animationDelay: '600ms'}} className="mt-14 animate-saas-fade-in">
+            <div style={font.mono} className="text-[11px] uppercase tracking-widest text-zinc-600 font-semibold">Melayani sektor</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {SECTORS.map((s) => (
+                <span key={s} style={font.mono} className="rounded-md border border-zinc-800/80 bg-zinc-900/20 px-3 py-1 text-xs text-zinc-400 transition-colors duration-200 hover:border-zinc-700 hover:text-zinc-300">{s}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Hero Image Side with Interactive Elements */}
+        <div style={{animationDelay: '200ms'}} className="relative animate-saas-fade-in">
+          <div className="relative mx-4 my-6 md:mx-8 md:my-10 group">
+            <ViewportCorners className="transition-transform duration-500 group-hover:scale-105" />
+            <div className="overflow-hidden rounded-xl border border-zinc-800/80 shadow-2xl shadow-black/80 bg-zinc-900/50 p-2 backdrop-blur-sm">
+              <img
+                src="https://images.unsplash.com/photo-1752614671052-92e18f534db1?auto=format&fit=crop&w=1400&q=80"
+                alt="Lengan robot industri bekerja di lini produksi otomatis"
+                className="h-[420px] w-full object-cover rounded-lg md:h-[520px] transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              />
+            </div>
+          </div>
+
+          <SpecBadge label="Toleransi" value="±0.02mm" className="absolute -left-2 top-6 hidden -translate-x-1/2 sm:block md:-left-6" delay="750ms" />
+          <SpecBadge label="Kapasitas" value="24/7 Produksi" className="absolute -right-2 bottom-16 hidden translate-x-1/3 sm:block md:-right-6" delay="900ms" />
+          <SpecBadge label="Terkirim" value="500+ Batch Part" className="absolute -bottom-4 left-1/4 hidden sm:block" delay="1050ms" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Features (Modern SaaS Light Grid)                                 */
+/* ------------------------------------------------------------------ */
+
+function Features() {
+  const revealRef = useScrollReveal();
+
+  return (
+    <section id="keunggulan" ref={revealRef} className="bg-zinc-50 py-24 md:py-32 transition-all duration-700">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs font-bold uppercase tracking-widest text-emerald-600">Kenapa Ferrum Works</div>
+          <h2 style={font.display} className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl md:text-5xl md:leading-tight">
+            Dibangun untuk tim engineering yang tidak bisa berkompromi.
+          </h2>
+        </div>
+
+        {/* SaaS Clean Card Layout with Soft Shadow Hover */}
+        <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f, index) => (
+            <div 
+              key={f.title} 
+              className="group relative bg-white border border-zinc-200/80 rounded-2xl p-8 saas-shadow-soft saas-shadow-hover overflow-hidden"
+            >
+              <ViewportCorners className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" color="stroke-emerald-600/30" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-950 text-emerald-400 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-zinc-950/20">
+                <f.icon width={22} height={22} />
+              </div>
+              <h3 style={font.display} className="mt-8 text-lg font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors duration-200">{f.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-500 font-normal">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Interactive Showcase                                              */
+/* ------------------------------------------------------------------ */
+
+function Showcase() {
+  const [active, setActive] = useState(SHOWCASE_TABS[0].id);
+  const tab = useMemo(() => SHOWCASE_TABS.find((t) => t.id === active), [active]);
+  const revealRef = useScrollReveal();
+
+  return (
+    <section id="layanan" ref={revealRef} className="bg-zinc-950 py-24 md:py-32 border-t border-zinc-900">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs font-semibold uppercase tracking-widest text-emerald-500">Alur Produksi</div>
+          <h2 style={font.display} className="mt-3 text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
+            Satu fasilitas, empat proses inti.
+          </h2>
+        </div>
+
+        {/* Modern SaaS Segmented Controls */}
+        <div className="mt-12 flex flex-wrap gap-2 border-b border-zinc-800/60 pb-5">
+          {SHOWCASE_TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActive(t.id)}
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-200 relative ${active === t.id ? "bg-emerald-500 text-zinc-950 font-semibold shadow-lg shadow-emerald-500/20 scale-105" : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content Panel */}
+        <div className="mt-12 grid grid-cols-1 items-center gap-12 md:grid-cols-2">
+          <div className="relative order-2 md:order-1 transition-all duration-300">
+            <div style={font.mono} className="text-[11px] font-bold uppercase tracking-widest text-emerald-500">{tab.eyebrow}</div>
+            <h3 style={font.display} className="mt-3 text-2xl font-bold text-zinc-50 md:text-3xl tracking-tight">{tab.title}</h3>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-400 font-normal md:text-base">{tab.desc}</p>
+
+            <dl className="mt-8 space-y-3 border-t border-zinc-900 pt-6">
+              {tab.specs.map((s) => (
+                <div key={s.label} className="flex items-center justify-between py-1 border-b border-zinc-900/40 last:border-none">
+                  <dt style={font.mono} className="text-xs uppercase tracking-wider text-zinc-500">{s.label}</dt>
+                  <dd style={font.mono} className="text-sm font-medium text-emerald-400">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="relative order-1 mx-2 my-4 md:order-2 md:mx-6 group">
+            <ViewportCorners className="transition-transform duration-300 group-hover:scale-102" />
+            <div className="overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-2 shadow-2xl shadow-black/60">
+              <img 
+                key={tab.id} 
+                src={tab.image} 
+                alt={tab.title} 
+                className="h-72 w-full object-cover rounded-lg transition-all duration-500 ease-out sm:h-96 md:h-[420px] group-hover:scale-[1.02] opacity-0 animate-saas-fade-in" 
+                style={{animationDuration: '400ms'}}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Testimonials                                                      */
+/* ------------------------------------------------------------------ */
+
+function Testimonials() {
+  const revealRef = useScrollReveal();
+
+  return (
+    <section id="testimoni" ref={revealRef} className="bg-zinc-50 py-24 md:py-32">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="max-w-xl">
+          <div style={font.mono} className="text-xs font-bold uppercase tracking-widest text-emerald-600">Dipercaya Tim Procurement & Engineering</div>
+          <h2 style={font.display} className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+            Kata mereka yang sudah bekerja sama.
+          </h2>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {TESTIMONIALS.map((t) => (
+            <figure 
+              key={t.name} 
+              className="flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white p-8 saas-shadow-soft saas-shadow-hover"
+            >
+              <div>
+                <div className="flex gap-1 text-amber-400">
+                  {Array.from({ length: 5 }).map((_, i) => (<Icons.Star key={i} width={14} height={14} />))}
+                </div>
+                <blockquote className="mt-5 text-sm leading-relaxed text-zinc-700 font-normal">"{t.quote}"</blockquote>
+              </div>
+              <figcaption className="mt-8 flex items-center gap-3.5 border-t border-zinc-100 pt-5">
+                <img src={t.avatar} alt={t.name} className="h-11 w-11 rounded-full border border-zinc-200 object-cover shadow-sm" />
+                <div>
+                  <div className="text-sm font-bold text-zinc-900">{t.name}</div>
+                  <div className="text-xs font-medium text-zinc-400 mt-0.5">{t.role}</div>
+                </div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* CTA Band                                                          */
+/* ------------------------------------------------------------------ */
+
+function CtaBand() {
+  const revealRef = useScrollReveal();
+
+  return (
+    <section id="kontak" ref={revealRef} className="relative overflow-hidden bg-emerald-500 py-24 shadow-inner">
+      <BlueprintGrid className="text-emerald-600/30" />
+      <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 text-center">
+        <h2 style={font.display} className="text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl md:text-5xl">
+          Punya gambar teknik yang siap diproduksi?
+        </h2>
+        <p className="max-w-xl text-sm text-zinc-900/70 font-medium md:text-base leading-relaxed">
+          Kirimkan file CAD atau spesifikasi part Anda, tim engineering kami akan
+          membalas dengan quotation dan estimasi lead time dalam 1x24 jam kerja.
+        </p>
+        <a href="mailto:rfq@ferrumworks.example" className="group mt-4 inline-flex items-center gap-2 rounded-md bg-zinc-950 px-7 py-4 text-sm font-semibold text-zinc-50 transition-all duration-200 hover:bg-zinc-900 hover:shadow-2xl hover:shadow-black/40 hover:-translate-y-0.5 active:translate-y-0">
+          Ajukan RFQ Sekarang
+          <Icons.ArrowRight width={16} height={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                            */
+/* ------------------------------------------------------------------ */
+
+function Footer() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubmitted(true);
+    setEmail("");
+  };
+
+  return (
+    <footer className="bg-zinc-950 pt-20 border-t border-zinc-900/60">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="grid grid-cols-1 gap-12 border-b border-zinc-900 pb-16 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <a href="#top" className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/10">
+                <span style={font.mono} className="text-xs font-medium text-emerald-400">FW</span>
+              </span>
+              <span style={font.display} className="text-lg font-semibold text-zinc-50">
+                FERRUM<span className="text-emerald-500">WORKS</span>
+              </span>
+            </a>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500 font-normal">
+              Mitra fabrikasi dan manufaktur presisi untuk tim engineering dan
+              procurement yang butuh part akurat, tepat waktu.
+            </p>
+            <div className="mt-6 flex gap-3">
+              {[Icons.LinkedIn, Icons.Instagram, Icons.Youtube].map((Icon, i) => (
+                <a key={i} href="#" className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/20 text-zinc-400 transition-all duration-200 hover:border-emerald-500/50 hover:bg-zinc-900/60 hover:text-emerald-400 hover:-translate-y-0.5" aria-label="Tautan media sosial">
+                  <Icon width={16} height={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs font-bold uppercase tracking-widest text-zinc-500">Navigasi</div>
+            <ul className="mt-4 space-y-3">
+              {NAV_LINKS.map((l) => (
+                <li key={l.href}><a href={l.href} className="text-sm text-zinc-400 transition-colors duration-200 hover:text-emerald-400 font-normal">{l.label}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs font-bold uppercase tracking-widest text-zinc-500">Layanan</div>
+            <ul className="mt-4 space-y-3">
+              {["Pemesinan CNC", "Fabrikasi Pelat Logam", "Pengelasan & Perakitan", "Inspeksi Kualitas"].map((s) => (
+                <li key={s}><a href="#layanan" className="text-sm text-zinc-400 transition-colors duration-200 hover:text-emerald-400 font-normal">{s}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <div style={font.mono} className="text-xs font-bold uppercase tracking-widest text-zinc-500">Buletin Produksi</div>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-500 font-normal">
+              Update kapasitas produksi dan studi kasus, langsung ke inbox Anda.
+            </p>
+            {submitted ? (
+              <p style={font.mono} className="mt-4 text-sm text-emerald-400 font-medium p-2 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">Terima kasih, email Anda tercatat.</p>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@perusahaan.com"
+                  className="w-full rounded-md border border-zinc-800 bg-zinc-900/60 px-3.5 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-emerald-500 font-normal"
+                />
+                <button type="submit" className="shrink-0 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 active:scale-95">
+                  Kirim
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-between gap-4 py-8 sm:flex-row border-t border-zinc-900/30">
+          <p className="text-xs text-zinc-600">© {new Date().getFullYear()} Ferrum Works. Semua hak dilindungi.</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Kebijakan Privasi</a>
+            <a href="#" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Syarat & Ketentuan</a>
+            <span style={font.mono} className="text-xs text-zinc-600 font-semibold tracking-wide">ISO 9001:2015 CERTIFIED</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* App Main Wrapper                                                  */
+/* ------------------------------------------------------------------ */
+
+function App() {
+  return (
+    <div style={font.body} className="min-h-screen bg-zinc-950 antialiased selection:bg-emerald-500 selection:text-zinc-950">
+      <Navbar />
+      <main>
+        <Hero />
+        <Features />
+        <Showcase />
+        <Testimonials />
+        <CtaBand />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
